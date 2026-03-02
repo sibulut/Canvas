@@ -1,0 +1,250 @@
+<style>
+#qz{--bg:#0f1117;--surface:#1a1d27;--border:#2a2d3a;--lime:#b6f542;--cyan:#42e8f5;--red:#f54255;--txt:#f0f0f0;--muted:#7a7d8a;--white:#ffffff;font-family:Georgia,serif;background:var(--bg);color:var(--txt);border-radius:12px;padding:2.4rem 1.4rem 3rem;display:flex;flex-direction:column;align-items:center;min-height:480px;position:relative;overflow:hidden}
+#qz *,#qz *::before,#qz *::after{box-sizing:border-box;margin:0;padding:0}
+#qz::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 60% 40% at 15% 0%,rgba(182,245,66,.07) 0%,transparent 60%),radial-gradient(ellipse 50% 35% at 85% 100%,rgba(66,232,245,.06) 0%,transparent 60%)}
+#qz .qz-header{width:100%;max-width:620px;display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;position:relative;z-index:1;flex-wrap:wrap;gap:.6rem}
+#qz .qz-title{font-family:Verdana,sans-serif;font-size:clamp(.7rem,2vw,.85rem);font-weight:400;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+#qz .qz-title span{color:var(--lime);font-weight:700}
+#qz .qz-pills{display:flex;gap:5px}
+#qz .qz-pill{width:28px;height:5px;border-radius:99px;background:var(--border);transition:background .4s ease}
+#qz .qz-pill.done{background:var(--lime)}
+#qz .qz-pill.active{background:rgba(182,245,66,.45)}
+#qz .qz-score-badge{font-family:Verdana,sans-serif;font-size:.75rem;font-weight:700;letter-spacing:.08em;color:var(--lime);background:rgba(182,245,66,.1);border:1px solid rgba(182,245,66,.25);padding:.28rem .75rem;border-radius:99px;transition:transform .2s,background .2s}
+#qz .qz-score-badge.bump{transform:scale(1.3);background:rgba(182,245,66,.25)}
+#qz .qz-body{width:100%;max-width:620px;position:relative;z-index:1}
+#qz .qz-q-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.8rem 2rem;margin-bottom:1.2rem;position:relative;overflow:hidden}
+#qz .qz-q-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--lime),var(--cyan))}
+#qz .qz-q-num{font-family:Verdana,sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--lime);margin-bottom:.7rem}
+#qz .qz-q-text{font-family:Georgia,serif;font-size:clamp(1rem,2.5vw,1.2rem);line-height:1.55;color:var(--white)}
+#qz .qz-options{display:flex;flex-direction:column;gap:.65rem}
+#qz .qz-opt{background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:.9rem 1.1rem;cursor:pointer;display:flex;align-items:center;gap:.85rem;transition:border-color .18s,background .18s,transform .14s;position:relative;overflow:hidden;font-family:Verdana,sans-serif;font-size:.85rem;color:var(--txt);text-align:left;width:100%}
+#qz .qz-opt:hover:not(:disabled){border-color:rgba(182,245,66,.5);background:rgba(182,245,66,.05);transform:translateX(5px)}
+#qz .qz-opt:disabled{cursor:default}
+#qz .qz-opt .qz-letter{min-width:28px;height:28px;border-radius:6px;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;color:var(--muted);transition:background .2s,color .2s;flex-shrink:0;font-family:Verdana,sans-serif}
+#qz .qz-opt.correct{border-color:var(--lime);background:rgba(182,245,66,.08);animation:qz-pop .3s ease}
+#qz .qz-opt.correct .qz-letter{background:var(--lime);color:#0f1117}
+#qz .qz-opt.wrong{border-color:var(--red);background:rgba(245,66,85,.08)}
+#qz .qz-opt.wrong .qz-letter{background:var(--red);color:#fff}
+#qz .qz-opt.dim{opacity:.35}
+@keyframes qz-pop{0%{transform:scale(1)}40%{transform:scale(1.02) translateX(5px)}100%{transform:scale(1) translateX(5px)}}
+#qz .qz-explain{margin-top:.9rem;background:rgba(182,245,66,.06);border:1px solid rgba(182,245,66,.18);border-radius:8px;padding:1rem 1.2rem;font-family:Verdana,sans-serif;font-size:.81rem;line-height:1.6;color:#c8d4a8;display:none;animation:qz-up .3s ease}
+#qz .qz-explain.show{display:block}
+#qz .qz-explain strong{color:var(--lime)}
+#qz .qz-next{margin-top:1.1rem;width:100%;max-width:620px;padding:.85rem;border-radius:8px;background:var(--lime);color:#0f1117;border:none;cursor:pointer;font-family:Verdana,sans-serif;font-size:.82rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;display:none;transition:background .18s,transform .12s,box-shadow .18s;position:relative;z-index:1}
+#qz .qz-next:hover{background:#d4ff5a;transform:translateY(-2px);box-shadow:0 6px 24px rgba(182,245,66,.3)}
+#qz .qz-next.show{display:block;animation:qz-up .3s ease}
+#qz .qz-body.out{animation:qz-out .22s ease forwards}
+#qz .qz-body.in{animation:qz-in .28s ease forwards}
+@keyframes qz-out{to{opacity:0;transform:translateX(-28px)}}
+@keyframes qz-in{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:translateX(0)}}
+@keyframes qz-up{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+#qz .qz-summary{display:none;flex-direction:column;align-items:center;text-align:center;width:100%;max-width:620px;position:relative;z-index:1;animation:qz-up .5s ease}
+#qz .qz-summary.show{display:flex}
+#qz .qz-grade-ring{width:130px;height:130px;border-radius:50%;background:conic-gradient(var(--lime) var(--pct,0%),var(--border) 0%);display:flex;align-items:center;justify-content:center;margin-bottom:1.5rem;box-shadow:0 0 40px rgba(182,245,66,.15)}
+#qz .qz-grade-inner{width:100px;height:100px;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center}
+#qz .qz-grade-inner .qz-pct{font-family:Georgia,serif;font-size:2rem;font-weight:700;color:var(--white);line-height:1}
+#qz .qz-grade-inner .qz-pct-lbl{font-family:Verdana,sans-serif;font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:.2rem}
+#qz .qz-sum-title{font-family:Georgia,serif;font-size:clamp(1.4rem,4vw,1.9rem);color:var(--white);margin-bottom:.5rem}
+#qz .qz-sum-sub{font-family:Verdana,sans-serif;font-size:.81rem;color:var(--muted);margin-bottom:1.8rem;line-height:1.6;max-width:420px}
+#qz .qz-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;width:100%;margin-bottom:1.6rem}
+#qz .qz-stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.9rem .5rem}
+#qz .qz-stat .qz-stat-n{font-family:Georgia,serif;font-size:1.6rem;font-weight:700;color:var(--white);line-height:1}
+#qz .qz-stat .qz-stat-lbl{font-family:Verdana,sans-serif;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:.3rem}
+#qz .qz-stat.s-good .qz-stat-n{color:var(--lime)}
+#qz .qz-stat.s-bad .qz-stat-n{color:var(--red)}
+#qz .qz-review-hd{font-family:Verdana,sans-serif;font-size:.65rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;text-align:left;width:100%}
+#qz .qz-review{width:100%;margin-bottom:1.8rem;display:flex;flex-direction:column;gap:.45rem}
+#qz .qz-rev-item{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:.7rem 1rem;display:flex;align-items:flex-start;gap:.7rem;text-align:left}
+#qz .qz-rev-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;margin-top:.1rem;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700}
+#qz .qz-rev-dot.ok{background:rgba(182,245,66,.15);color:var(--lime)}
+#qz .qz-rev-dot.no{background:rgba(245,66,85,.15);color:var(--red)}
+#qz .qz-rev-q{font-family:Verdana,sans-serif;font-size:.77rem;color:var(--txt);line-height:1.4}
+#qz .qz-rev-q em{display:block;font-size:.71rem;color:var(--muted);margin-top:.2rem;font-style:normal}
+#qz .qz-rev-q em b{color:var(--lime)}
+#qz .qz-restart{padding:.85rem 2.8rem;border-radius:8px;background:transparent;color:var(--lime);border:1.5px solid var(--lime);font-family:Verdana,sans-serif;font-size:.8rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:background .18s,color .18s,transform .12s,box-shadow .18s}
+#qz .qz-restart:hover{background:var(--lime);color:#0f1117;transform:translateY(-2px);box-shadow:0 6px 24px rgba(182,245,66,.3)}
+#qz .qz-ptcl{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#qz .qz-p{position:absolute;border-radius:50%;opacity:0;animation:qz-fall 1.5s ease forwards}
+@keyframes qz-fall{0%{opacity:1;transform:translateY(-10px) rotate(0deg)}100%{opacity:0;transform:translateY(130px) rotate(400deg)}}
+</style>
+
+<div id="qz">
+  <div class="qz-ptcl" id="qz-ptcl"></div>
+
+  <div class="qz-header">
+    <div class="qz-title">Biology 101 &nbsp;/&nbsp; <span>Knowledge Check</span></div>
+    <div class="qz-pills" id="qz-pills"></div>
+    <div class="qz-score-badge" id="qz-score">Score: 0</div>
+  </div>
+
+  <div class="qz-body" id="qz-body">
+    <div class="qz-q-wrap">
+      <div class="qz-q-num" id="qz-q-num">Question 1 of 6</div>
+      <p class="qz-q-text" id="qz-q-text"></p>
+    </div>
+    <div class="qz-options" id="qz-opts"></div>
+    <div class="qz-explain" id="qz-explain"></div>
+  </div>
+  <button class="qz-next" id="qz-next" onclick="qzNext()">Next Question &#8594;</button>
+
+  <div class="qz-summary" id="qz-summary">
+    <div class="qz-grade-ring" id="qz-ring">
+      <div class="qz-grade-inner">
+        <span class="qz-pct" id="qz-pct">0%</span>
+        <span class="qz-pct-lbl">Score</span>
+      </div>
+    </div>
+    <h2 class="qz-sum-title" id="qz-sum-title">Quiz Complete!</h2>
+    <p class="qz-sum-sub" id="qz-sum-sub"></p>
+    <div class="qz-breakdown" id="qz-breakdown"></div>
+    <div class="qz-review-hd">Question Review</div>
+    <div class="qz-review" id="qz-review"></div>
+    <button class="qz-restart" onclick="qzRestart()">&#8635; Try Again</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var QS=[
+    {q:"Which organelle is responsible for producing ATP through cellular respiration?",opts:["Nucleus","Ribosome","Mitochondria","Vacuole"],ans:2,ex:"<strong>Mitochondria</strong> generate ATP via oxidative phosphorylation. Their inner membrane is folded into cristae to maximise surface area for ATP synthesis."},
+    {q:"What structure controls which substances enter and exit the cell?",opts:["Cell wall","Cell membrane","Golgi apparatus","Cytoplasm"],ans:1,ex:"The <strong>cell membrane</strong> is a selectively permeable phospholipid bilayer. It regulates transport through channel proteins, carrier proteins, and vesicle-based processes."},
+    {q:"Which organelle packages and ships proteins to their destinations inside or outside the cell?",opts:["Ribosome","Lysosome","Endoplasmic reticulum","Golgi apparatus"],ans:3,ex:"The <strong>Golgi apparatus</strong> receives proteins from the rough ER, modifies them (e.g. adding sugar chains), then packages them into vesicles for delivery to their target locations."},
+    {q:"Ribosomes carry out which critical cellular function?",opts:["Lipid synthesis","Protein synthesis","DNA replication","Energy storage"],ans:1,ex:"<strong>Ribosomes</strong> translate mRNA into polypeptide chains. They can float free in the cytoplasm or sit on the rough endoplasmic reticulum for proteins destined for secretion."},
+    {q:"Which organelle contains digestive enzymes that break down cellular waste?",opts:["Vacuole","Mitochondria","Lysosome","Nucleus"],ans:2,ex:"<strong>Lysosomes</strong> are membrane-bound vesicles packed with hydrolytic enzymes. They carry out autophagy (recycling damaged organelles) and help defend against pathogens."},
+    {q:"In plant cells, which organelle is far larger than in animal cells and maintains turgor pressure?",opts:["Chloroplast","Central vacuole","Cell wall","Smooth ER"],ans:1,ex:"The <strong>central vacuole</strong> can occupy up to 90% of a plant cell's volume. It stores water, ions, and nutrients — and its internal pressure keeps the plant rigid and upright."}
+  ];
+  var cur=0,score=0,results=[];
+  var L=['A','B','C','D'];
+
+  function init(){
+    cur=0;score=0;results=[];
+    document.getElementById('qz-summary').classList.remove('show');
+    document.getElementById('qz-body').style.display='';
+    document.getElementById('qz-next').className='qz-next';
+    document.getElementById('qz-score').textContent='Score: 0';
+    buildPills();renderQ();
+  }
+
+  function buildPills(){
+    var p=document.getElementById('qz-pills');p.innerHTML='';
+    for(var i=0;i<QS.length;i++){
+      var d=document.createElement('div');
+      d.className='qz-pill'+(i===0?' active':'');
+      d.id='qz-pill-'+i;p.appendChild(d);
+    }
+  }
+
+  function renderQ(){
+    var q=QS[cur];
+    document.getElementById('qz-q-num').textContent='Question '+(cur+1)+' of '+QS.length;
+    document.getElementById('qz-q-text').textContent=q.q;
+    var opts=document.getElementById('qz-opts');opts.innerHTML='';
+    for(var i=0;i<q.opts.length;i++){
+      var btn=document.createElement('button');
+      btn.className='qz-opt';
+      btn.innerHTML='<span class="qz-letter">'+L[i]+'</span>'+q.opts[i];
+      btn.setAttribute('data-i',i);
+      btn.addEventListener('click',onAnswer);
+      opts.appendChild(btn);
+    }
+    document.getElementById('qz-explain').className='qz-explain';
+    document.getElementById('qz-explain').innerHTML='';
+    document.getElementById('qz-next').className='qz-next';
+    for(var j=0;j<QS.length;j++){
+      var pill=document.getElementById('qz-pill-'+j);
+      if(pill)pill.className='qz-pill'+(j<cur?' done':j===cur?' active':'');
+    }
+  }
+
+  function onAnswer(e){
+    var btn=e.currentTarget;
+    var chosen=parseInt(btn.getAttribute('data-i'));
+    var correct=QS[cur].ans;
+    var ok=chosen===correct;
+    var all=document.querySelectorAll('#qz-opts .qz-opt');
+    for(var i=0;i<all.length;i++){
+      all[i].disabled=true;
+      var idx=parseInt(all[i].getAttribute('data-i'));
+      if(idx===correct)all[i].classList.add('correct');
+      else if(idx===chosen&&!ok)all[i].classList.add('wrong');
+      else all[i].classList.add('dim');
+    }
+    var ex=document.getElementById('qz-explain');
+    ex.innerHTML=QS[cur].ex;ex.classList.add('show');
+    results.push({q:QS[cur].q,ok:ok,ans:QS[cur].opts[correct]});
+    if(ok){
+      score++;
+      var sb=document.getElementById('qz-score');
+      sb.textContent='Score: '+score;
+      sb.classList.add('bump');
+      setTimeout(function(){sb.classList.remove('bump');},320);
+    }
+    var nxt=document.getElementById('qz-next');
+    nxt.textContent=cur===QS.length-1?'See Results \u2192':'Next Question \u2192';
+    nxt.classList.add('show');
+  }
+
+  window.qzNext=function(){
+    var body=document.getElementById('qz-body');
+    body.classList.add('out');
+    setTimeout(function(){
+      cur++;body.classList.remove('out');
+      if(cur>=QS.length){showSummary();}
+      else{
+        body.classList.add('in');renderQ();
+        document.getElementById('qz-next').className='qz-next';
+        setTimeout(function(){body.classList.remove('in');},280);
+      }
+    },200);
+  };
+
+  function showSummary(){
+    document.getElementById('qz-body').style.display='none';
+    document.getElementById('qz-next').className='qz-next';
+    var pct=Math.round(score/QS.length*100);
+    document.getElementById('qz-ring').style.setProperty('--pct',pct+'%');
+    document.getElementById('qz-pct').textContent=pct+'%';
+    var grade,sub;
+    if(pct===100){grade='Perfect Score!';sub='Outstanding \u2014 you nailed every question. You clearly know your cell biology.';}
+    else if(pct>=80){grade='Excellent Work!';sub='Great result! You have a strong grasp of cell structure and function.';}
+    else if(pct>=60){grade='Good Effort!';sub='Solid understanding. Review the missed questions and try again.';}
+    else{grade='Keep Studying!';sub='Cell biology takes practice. Review your flashcards and give it another shot!';}
+    document.getElementById('qz-sum-title').textContent=grade;
+    document.getElementById('qz-sum-sub').textContent=sub;
+    document.getElementById('qz-breakdown').innerHTML=
+      '<div class="qz-stat s-good"><div class="qz-stat-n">'+score+'</div><div class="qz-stat-lbl">Correct</div></div>'+
+      '<div class="qz-stat s-bad"><div class="qz-stat-n">'+(QS.length-score)+'</div><div class="qz-stat-lbl">Missed</div></div>'+
+      '<div class="qz-stat"><div class="qz-stat-n">'+QS.length+'</div><div class="qz-stat-lbl">Total</div></div>';
+    var rv=document.getElementById('qz-review');rv.innerHTML='';
+    for(var i=0;i<results.length;i++){
+      var r=results[i];
+      var item=document.createElement('div');item.className='qz-rev-item';
+      item.innerHTML='<div class="qz-rev-dot '+(r.ok?'ok':'no')+'">'+(r.ok?'&#10003;':'&#10007;')+'</div>'+
+        '<div class="qz-rev-q">'+r.q+(r.ok?'':'<em>Correct answer: <b>'+r.ans+'</b></em>')+'</div>';
+      rv.appendChild(item);
+    }
+    for(var j=0;j<QS.length;j++){var p=document.getElementById('qz-pill-'+j);if(p)p.className='qz-pill done';}
+    document.getElementById('qz-summary').classList.add('show');
+    if(pct>=80)burst();
+  }
+
+  function burst(){
+    var c=document.getElementById('qz-ptcl');c.innerHTML='';
+    var cols=['#b6f542','#42e8f5','#f5e642','#f542a0','#ffffff','#ff9f42'];
+    for(var i=0;i<32;i++){
+      var p=document.createElement('div');p.className='qz-p';
+      p.style.left=Math.random()*100+'%';
+      p.style.top=Math.random()*50+'%';
+      p.style.background=cols[i%cols.length];
+      p.style.animationDelay=(Math.random()*.7)+'s';
+      p.style.animationDuration=(.9+Math.random()*.9)+'s';
+      var sz=(4+Math.random()*7)+'px';p.style.width=p.style.height=sz;
+      c.appendChild(p);
+    }
+    setTimeout(function(){c.innerHTML='';},2800);
+  }
+
+  window.qzRestart=function(){init();};
+  init();
+})();
+</script>
