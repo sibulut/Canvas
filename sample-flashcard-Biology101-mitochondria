@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flashcard Study Set</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:    #1a1a2e;
+    --paper:  #f5f0e8;
+    --gold:   #c9963a;
+    --teal:   #2a7a74;
+    --muted:  #7a7265;
+    --card-w: 560px;
+    --card-h: 320px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.5rem 1rem 3rem;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(201,150,58,.12) 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 100%, rgba(42,122,116,.10) 0%, transparent 55%);
+  }
+
+  header { text-align: center; margin-bottom: 2.4rem; }
+  header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700; letter-spacing: -.02em; color: var(--ink); line-height: 1.1;
+  }
+  header p.subtitle { margin-top: .45rem; font-size: .9rem; color: var(--muted); font-weight: 300; letter-spacing: .04em; }
+  .set-badge {
+    display: inline-block; margin-top: .9rem;
+    background: var(--ink); color: var(--paper);
+    font-size: .72rem; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+    padding: .3rem .85rem; border-radius: 2px;
+  }
+
+  .progress-wrap { width: min(var(--card-w), 94vw); margin-bottom: 1.6rem; }
+  .progress-label { display: flex; justify-content: space-between; font-size: .78rem; color: var(--muted); margin-bottom: .45rem; }
+  .progress-track { width: 100%; height: 4px; background: rgba(26,26,46,.12); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--teal), var(--gold)); border-radius: 99px; transition: width .4s ease; }
+
+  .scene {
+    width: min(var(--card-w), 94vw); height: var(--card-h);
+    perspective: 1200px; cursor: pointer; user-select: none;
+  }
+  .card {
+    width: 100%; height: 100%; position: relative;
+    transform-style: preserve-3d;
+    transition: transform .55s cubic-bezier(.4,0,.2,1);
+    border-radius: 6px;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute; inset: 0; border-radius: 6px;
+    backface-visibility: hidden;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    padding: 2.5rem 2.8rem; text-align: center;
+    border: 1.5px solid rgba(26,26,46,.1);
+    box-shadow: 0 4px 6px rgba(26,26,46,.05), 0 12px 30px rgba(26,26,46,.08), inset 0 1px 0 rgba(255,255,255,.7);
+  }
+  .card-front { background: #fff; }
+  .card-back  { background: var(--ink); transform: rotateY(180deg); border-color: transparent; box-shadow: 0 4px 6px rgba(26,26,46,.1), 0 16px 40px rgba(26,26,46,.2); }
+
+  .face-label { position: absolute; top: 1rem; left: 1.2rem; font-size: .65rem; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; opacity: .45; }
+  .card-front .face-label { color: var(--ink); }
+  .card-back  .face-label { color: var(--paper); }
+
+  .card-number { position: absolute; top: 1rem; right: 1.2rem; font-size: .65rem; font-weight: 300; letter-spacing: .08em; opacity: .35; }
+  .card-front .card-number { color: var(--ink); }
+  .card-back  .card-number { color: var(--paper); }
+
+  .card-text { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(1.1rem, 3.2vw, 1.5rem); line-height: 1.45; font-weight: 400; }
+  .card-front .card-text { color: var(--ink); }
+  .card-back  .card-text { color: var(--paper); }
+
+  .card-hint { margin-top: 1.1rem; font-size: .8rem; font-weight: 300; opacity: .5; }
+  .card-front .card-hint { color: var(--ink); }
+
+  .flip-cue { position: absolute; bottom: 1.1rem; right: 1.3rem; display: flex; align-items: center; gap: .35rem; font-size: .68rem; font-weight: 400; letter-spacing: .06em; opacity: .32; }
+  .card-front .flip-cue { color: var(--ink); }
+  .card-back  .flip-cue { color: var(--paper); }
+  .flip-cue svg { width: 13px; height: 13px; fill: currentColor; }
+
+  .answer-chips { display: flex; gap: .6rem; margin-top: 1rem; transition: opacity .3s; }
+  .chip { flex: 1; max-width: 130px; padding: .5rem 0; border-radius: 3px; font-size: .75rem; font-weight: 500; letter-spacing: .05em; border: 1.5px solid transparent; cursor: pointer; transition: background .18s, transform .12s, box-shadow .18s; text-align: center; }
+  .chip.got-it { background: rgba(42,122,116,.08); border-color: var(--teal); color: var(--teal); }
+  .chip.got-it:hover { background: var(--teal); color: #fff; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(42,122,116,.25); }
+  .chip.missed { background: rgba(201,150,58,.08); border-color: var(--gold); color: #9a6e1a; }
+  .chip.missed:hover { background: var(--gold); color: #fff; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(201,150,58,.3); }
+  .answer-chips.hidden { opacity: 0; pointer-events: none; }
+
+  .nav { display: flex; align-items: center; gap: 1.2rem; margin-top: 1.6rem; }
+  .nav-btn { width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid rgba(26,26,46,.18); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .18s, border-color .18s, transform .12s; color: var(--ink); }
+  .nav-btn:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); color: var(--paper); transform: scale(1.05); }
+  .nav-btn:disabled { opacity: .25; cursor: default; }
+  .nav-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  .nav-counter { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--muted); min-width: 56px; text-align: center; }
+  .nav-counter span { color: var(--ink); font-weight: 700; }
+
+  .controls { display: flex; gap: 1rem; margin-top: 1.4rem; }
+  .ctrl-btn { background: none; border: 1.5px solid rgba(26,26,46,.2); color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: .75rem; font-weight: 500; letter-spacing: .07em; text-transform: uppercase; padding: .45rem 1.1rem; border-radius: 3px; cursor: pointer; transition: border-color .18s, color .18s, background .18s; }
+  .ctrl-btn:hover { border-color: var(--ink); color: var(--ink); background: rgba(26,26,46,.04); }
+
+  .summary { display: none; flex-direction: column; align-items: center; text-align: center; width: min(var(--card-w), 94vw); background: #fff; border: 1.5px solid rgba(26,26,46,.1); border-radius: 6px; padding: 2.8rem 2.4rem; box-shadow: 0 12px 30px rgba(26,26,46,.08); animation: fadeUp .4s ease; }
+  .summary.visible { display: flex; }
+  .summary h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: .6rem; }
+  .summary p { color: var(--muted); font-size: .9rem; margin-bottom: 1.6rem; }
+
+  .score-ring { width: 110px; height: 110px; border-radius: 50%; background: conic-gradient(var(--teal) var(--pct, 0%), rgba(26,26,46,.08) 0%); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.4rem; box-shadow: 0 0 0 6px var(--paper), 0 0 0 7px rgba(26,26,46,.08); }
+  .score-inner { width: 82px; height: 82px; border-radius: 50%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .score-inner .big { font-family:'Playfair Display',serif; font-size:1.7rem; font-weight:700; color:var(--ink); line-height:1; }
+  .score-inner .lbl { font-size:.62rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+
+  .summary .restart-btn { margin-top: .6rem; padding: .7rem 2.2rem; background: var(--ink); color: var(--paper); border: none; border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: .8rem; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; cursor: pointer; transition: background .18s, transform .12s; }
+  .summary .restart-btn:hover { background: var(--teal); transform: translateY(-1px); }
+
+  @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+
+  @media (max-width: 480px) {
+    :root { --card-h: 270px; }
+    .card-face { padding: 2rem 1.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Biology 101</h1>
+  <p class="subtitle">Cell Structure &amp; Function</p>
+  <span class="set-badge" id="setBadge">Study Set · 8 cards</span>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span id="progressText">Card 1 of 8</span>
+    <span id="scoreText">✓ 0 &nbsp;✗ 0</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:12.5%"></div></div>
+</div>
+
+<div class="scene" id="scene" onclick="flipCard()">
+  <div class="card" id="card">
+    <div class="card-face card-front">
+      <span class="face-label">Term</span>
+      <span class="card-number" id="frontNum">1 / 8</span>
+      <p class="card-text" id="frontText">Mitochondria</p>
+      <p class="card-hint">Click to reveal the definition</p>
+      <span class="flip-cue">
+        <svg viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        Flip
+      </span>
+    </div>
+    <div class="card-face card-back">
+      <span class="face-label">Definition</span>
+      <span class="card-number" id="backNum">1 / 8</span>
+      <p class="card-text" id="backText">The powerhouse of the cell; produces ATP through cellular respiration.</p>
+      <span class="flip-cue">
+        <svg viewBox="0 0 24 24"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        Flip back
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="answer-chips hidden" id="chips">
+  <button class="chip got-it" onclick="markCard(true)">✓ Got it</button>
+  <button class="chip missed"  onclick="markCard(false)">✗ Still learning</button>
+</div>
+
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>
+    <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <span class="nav-counter"><span id="navCurrent">1</span> / <span id="navTotal">8</span></span>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">
+    <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+</div>
+
+<div class="controls">
+  <button class="ctrl-btn" onclick="shuffleCards()">⇄ Shuffle</button>
+  <button class="ctrl-btn" onclick="resetDeck()">↺ Reset</button>
+</div>
+
+<div class="summary" id="summary">
+  <h2>Set Complete! 🎉</h2>
+  <p>Here's how you did on this round.</p>
+  <div class="score-ring" id="scoreRing">
+    <div class="score-inner">
+      <span class="big" id="scoreBig">0</span>
+      <span class="lbl">Correct</span>
+    </div>
+  </div>
+  <p id="summaryDetail"></p>
+  <button class="restart-btn" onclick="resetDeck()">Study Again</button>
+</div>
+
+<script>
+// ── Edit this array to customise your flashcard set ──────────────────────────
+const CARDS = [
+  { term: "Mitochondria",           def: "The powerhouse of the cell; produces ATP through cellular respiration." },
+  { term: "Nucleus",                def: "The control centre of the cell; contains genetic material (DNA) and directs cell activity." },
+  { term: "Ribosome",               def: "Tiny organelle responsible for synthesising proteins from mRNA templates." },
+  { term: "Endoplasmic Reticulum",  def: "A network of membranes involved in protein and lipid synthesis; comes in rough (with ribosomes) and smooth forms." },
+  { term: "Golgi Apparatus",        def: "Processes and packages proteins and lipids from the ER before shipping them to their destination." },
+  { term: "Lysosome",               def: "Contains digestive enzymes that break down waste materials and cellular debris." },
+  { term: "Cell Membrane",          def: "A selectively permeable phospholipid bilayer that regulates what enters and exits the cell." },
+  { term: "Vacuole",                def: "A membrane-bound organelle that stores water, nutrients, or waste; especially large in plant cells." },
+];
+// ─────────────────────────────────────────────────────────────────────────────
+
+let deck = [], current = 0, isFlipped = false, scores = {};
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function init(doShuffle) {
+  deck    = doShuffle ? shuffle([...CARDS]) : [...CARDS];
+  scores  = {};
+  current = 0;
+  isFlipped = false;
+  document.getElementById('card').classList.remove('flipped');
+  document.getElementById('summary').classList.remove('visible');
+  ['scene','nav','controls','chips','progress-wrap'].forEach(id => {
+    const el = document.getElementById(id) || document.querySelector('.' + id);
+    if (el) el.style.display = '';
+  });
+  document.getElementById('chips').classList.add('hidden');
+  document.getElementById('setBadge').textContent = `Study Set · ${deck.length} cards`;
+  render();
+}
+
+function render() {
+  const c = deck[current], total = deck.length;
+  document.getElementById('frontText').textContent = c.term;
+  document.getElementById('backText').textContent  = c.def;
+  document.getElementById('frontNum').textContent  = `${current+1} / ${total}`;
+  document.getElementById('backNum').textContent   = `${current+1} / ${total}`;
+  document.getElementById('navCurrent').textContent = current + 1;
+  document.getElementById('navTotal').textContent   = total;
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').disabled = current === total - 1;
+
+  document.getElementById('progressFill').style.width = ((current + 1) / total * 100) + '%';
+  document.getElementById('progressText').textContent = `Card ${current+1} of ${total}`;
+
+  const got    = Object.values(scores).filter(Boolean).length;
+  const missed = Object.values(scores).filter(v => v === false).length;
+  document.getElementById('scoreText').textContent = `✓ ${got}  ✗ ${missed}`;
+
+  document.getElementById('chips').classList.toggle('hidden', !isFlipped);
+}
+
+function flipCard() {
+  isFlipped = !isFlipped;
+  document.getElementById('card').classList.toggle('flipped', isFlipped);
+  render();
+}
+
+function navigate(dir) {
+  const next = current + dir;
+  if (next < 0 || next >= deck.length) return;
+  current   = next;
+  isFlipped = false;
+  document.getElementById('card').classList.remove('flipped');
+  render();
+}
+
+function markCard(correct) {
+  scores[current] = correct;
+  if (Object.keys(scores).length === deck.length) { showSummary(); return; }
+  let next = current + 1;
+  while (next < deck.length && next in scores) next++;
+  if (next >= deck.length) next = 0;
+  current   = next;
+  isFlipped = false;
+  document.getElementById('card').classList.remove('flipped');
+  render();
+}
+
+function showSummary() {
+  const got   = Object.values(scores).filter(Boolean).length;
+  const total = deck.length;
+  const pct   = Math.round(got / total * 100);
+
+  document.getElementById('scene').style.display    = 'none';
+  document.querySelector('.nav').style.display      = 'none';
+  document.querySelector('.controls').style.display = 'none';
+  document.getElementById('chips').classList.add('hidden');
+
+  document.getElementById('scoreRing').style.setProperty('--pct', pct + '%');
+  document.getElementById('scoreBig').textContent    = got;
+  document.getElementById('summaryDetail').textContent =
+    `${got} of ${total} correct — ${pct}% · ${total - got} card${total-got !== 1 ? 's' : ''} to review`;
+
+  document.getElementById('summary').classList.add('visible');
+}
+
+function shuffleCards() { init(true);  }
+function resetDeck()    { init(false); }
+
+init(false);
+</script>
+</body>
+</html>
