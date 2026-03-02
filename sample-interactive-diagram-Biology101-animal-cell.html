@@ -1,0 +1,479 @@
+<style>
+/* ── Animal Cell Diagram · Canvas-safe · scoped to #cw ── */
+#cw,#cw *,#cw *::before,#cw *::after{box-sizing:border-box;margin:0;padding:0}
+#cw{
+  font-family:Georgia,serif;background:#080c14;color:#e2e8f0;
+  border-radius:14px;padding:1.8rem 1.4rem 2.2rem;user-select:none;
+}
+#cw-hd{text-align:center;margin-bottom:1.4rem}
+#cw-hd h2{font-family:Georgia,serif;font-size:clamp(1.1rem,3vw,1.55rem);font-weight:700;color:#fff;letter-spacing:.02em}
+#cw-hd p{font-family:Verdana,sans-serif;font-size:.74rem;color:#475569;margin-top:.3rem;letter-spacing:.06em}
+#cw-main{display:flex;flex-wrap:wrap;gap:1.1rem;align-items:flex-start}
+#cw-svg-wrap{flex:1 1 300px;min-width:260px}
+#cw-svg{width:100%;height:auto;display:block}
+/* organelle click/hover */
+.cw-org{cursor:pointer}
+.cw-org:hover .cw-gl{opacity:.55!important;transition:opacity .2s}
+.cw-org.active .cw-gl{opacity:.85!important;filter:url(#f-hi)!important}
+.cw-org.active .cw-bdr{stroke-width:3.5!important;opacity:1!important}
+/* panel */
+#cw-panel{
+  flex:1 1 230px;min-width:210px;max-width:310px;
+  background:#0d1421;border:1px solid #1e2a3a;border-radius:10px;
+  padding:1.3rem;display:flex;flex-direction:column;gap:.8rem;
+}
+/* legend */
+#cw-leg .cw-leg-hd{font-family:Verdana,sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#334155;margin-bottom:.5rem}
+.cw-li{
+  display:flex;align-items:center;gap:.55rem;padding:.38rem .5rem;
+  border-radius:6px;border:1px solid transparent;cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.cw-li:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.07)}
+.cw-li.active{background:rgba(255,255,255,.06);border-color:var(--lc,#fff)}
+.cw-li .cw-dot{width:9px;height:9px;border-radius:50%;background:var(--lc);flex-shrink:0}
+.cw-li .cw-nm{font-family:Verdana,sans-serif;font-size:.78rem;color:#94a3b8}
+/* detail */
+#cw-det{display:none;flex-direction:column;gap:.7rem;animation:cw-up .32s ease}
+#cw-det.show{display:flex}
+@keyframes cw-up{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+.cw-det-name{font-family:Georgia,serif;font-size:1.25rem;font-weight:700;color:#fff;line-height:1.2}
+.cw-det-role{font-family:Verdana,sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dc)}
+.cw-det-bar{height:2px;width:38%;background:var(--dc);border-radius:99px;margin:.05rem 0}
+.cw-det-desc{font-family:Verdana,sans-serif;font-size:.79rem;line-height:1.62;color:#94a3b8}
+.cw-det-facts{display:flex;flex-direction:column;gap:.38rem}
+.cw-det-fact{font-family:Verdana,sans-serif;font-size:.75rem;color:#cbd5e1;padding:.38rem .6rem;background:rgba(255,255,255,.035);border-left:2px solid var(--dc);border-radius:0 4px 4px 0;line-height:1.5}
+.cw-det-know{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:7px;padding:.6rem .75rem;font-family:Verdana,sans-serif;font-size:.73rem;color:#94a3b8;line-height:1.55}
+.cw-det-know strong{color:var(--dc)}
+.cw-back{margin-top:auto;background:none;border:1px solid #1e2a3a;border-radius:5px;color:#475569;font-family:Verdana,sans-serif;font-size:.68rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:.38rem .8rem;cursor:pointer;align-self:flex-start;transition:border-color .15s,color .15s}
+.cw-back:hover{border-color:#475569;color:#94a3b8}
+@media(max-width:560px){#cw-main{flex-direction:column}#cw-panel{max-width:100%}}
+</style>
+
+<div id="cw">
+  <div id="cw-hd">
+    <h2>Animal Cell — Interactive Diagram</h2>
+    <p>Click any organelle to explore its structure &amp; function</p>
+  </div>
+  <div id="cw-main">
+
+    <!-- SVG DIAGRAM -->
+    <div id="cw-svg-wrap">
+    <svg id="cw-svg" viewBox="0 0 520 430" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="f-glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="5" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="f-sm" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="f-hi" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="8" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <radialGradient id="g-cyto" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#162033" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="#060a10" stop-opacity="1"/>
+        </radialGradient>
+        <radialGradient id="g-nuc" cx="38%" cy="38%" r="62%">
+          <stop offset="0%" stop-color="#312e81"/>
+          <stop offset="100%" stop-color="#1e1b4b"/>
+        </radialGradient>
+        <radialGradient id="g-nucl" cx="38%" cy="38%" r="62%">
+          <stop offset="0%" stop-color="#6d28d9"/>
+          <stop offset="100%" stop-color="#3b0764"/>
+        </radialGradient>
+        <radialGradient id="g-mito" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#9a3412"/>
+          <stop offset="100%" stop-color="#431407"/>
+        </radialGradient>
+        <radialGradient id="g-lyso" cx="38%" cy="38%" r="62%">
+          <stop offset="0%" stop-color="#881337"/>
+          <stop offset="100%" stop-color="#3f0618"/>
+        </radialGradient>
+        <radialGradient id="g-vac" cx="38%" cy="35%" r="65%">
+          <stop offset="0%" stop-color="#075985"/>
+          <stop offset="100%" stop-color="#082f49"/>
+        </radialGradient>
+      </defs>
+
+      <!-- cytoplasm fill -->
+      <ellipse cx="258" cy="215" rx="243" ry="192" fill="url(#g-cyto)"/>
+
+      <!-- floating cytoplasm particles -->
+      <circle cx="230" cy="155" r="1.5" fill="#334155" opacity="0.6"/>
+      <circle cx="350" cy="172" r="1.2" fill="#334155" opacity="0.5"/>
+      <circle cx="175" cy="330" r="1.5" fill="#334155" opacity="0.5"/>
+      <circle cx="410" cy="310" r="1.2" fill="#334155" opacity="0.6"/>
+      <circle cx="300" cy="380" r="1.5" fill="#334155" opacity="0.4"/>
+      <circle cx="95"  cy="250" r="1.2" fill="#334155" opacity="0.5"/>
+      <circle cx="445" cy="195" r="1.5" fill="#334155" opacity="0.5"/>
+
+      <!-- ── SMOOTH ER ── -->
+      <g class="cw-org" data-id="smooth-er" onclick="cwSel('smooth-er')">
+        <title>Smooth ER — click to explore</title>
+        <path class="cw-gl" d="M 108,248 C 130,224 158,232 162,256 C 166,280 148,296 126,298 C 114,300 106,286 112,270" fill="none" stroke="#2dd4bf" stroke-width="7" opacity="0.22" filter="url(#f-sm)"/>
+        <path class="cw-bdr" d="M 108,248 C 130,224 158,232 162,256 C 166,280 148,296 126,298 C 114,300 106,286 112,270" fill="none" stroke="#2dd4bf" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
+        <path d="M 118,253 C 138,230 164,238 168,261 C 172,283 156,298 136,300" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+        <path d="M 128,258 C 146,237 168,244 172,266" fill="none" stroke="#2dd4bf" stroke-width="1.5" stroke-linecap="round" opacity="0.22"/>
+      </g>
+
+      <!-- ── ROUGH ER ── -->
+      <g class="cw-org" data-id="rough-er" onclick="cwSel('rough-er')">
+        <title>Rough ER — click to explore</title>
+        <path class="cw-gl" d="M 283,158 C 306,148 318,170 298,184 C 278,198 298,212 318,204 C 338,196 340,215 322,228 C 304,241 320,256 334,248" fill="none" stroke="#10b981" stroke-width="7" opacity="0.2" filter="url(#f-sm)"/>
+        <path class="cw-bdr" d="M 283,158 C 306,148 318,170 298,184 C 278,198 298,212 318,204 C 338,196 340,215 322,228 C 304,241 320,256 334,248" fill="none" stroke="#10b981" stroke-width="2.8" stroke-linecap="round" opacity="0.85"/>
+        <!-- ribosomes on rough ER -->
+        <circle cx="288" cy="157" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="298" cy="151" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="309" cy="152" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="315" cy="162" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="312" cy="172" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="301" cy="178" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="288" cy="183" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="284" cy="194" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="292" cy="203" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="305" cy="206" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="318" cy="200" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="328" cy="203" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="333" cy="213" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="325" cy="224" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="315" cy="230" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="318" cy="242" r="3.2" fill="#fbbf24" opacity="0.9"/>
+        <circle cx="330" cy="248" r="3.2" fill="#fbbf24" opacity="0.9"/>
+      </g>
+
+      <!-- ── NUCLEUS ── -->
+      <g class="cw-org" data-id="nucleus" onclick="cwSel('nucleus')">
+        <title>Nucleus — click to explore</title>
+        <circle class="cw-gl" cx="194" cy="194" r="79" fill="#818cf8" opacity="0.14" filter="url(#f-glow)"/>
+        <circle cx="194" cy="194" r="79" fill="url(#g-nuc)"/>
+        <circle class="cw-bdr" cx="194" cy="194" r="79" fill="none" stroke="#818cf8" stroke-width="2.5" stroke-dasharray="7 4" opacity="0.88"/>
+        <circle cx="194" cy="194" r="74" fill="none" stroke="#818cf8" stroke-width="1" opacity="0.18"/>
+        <!-- nuclear pore hints -->
+        <circle cx="194" cy="115" r="3.5" fill="none" stroke="#818cf8" stroke-width="1.5" opacity="0.5"/>
+        <circle cx="260" cy="148" r="3.5" fill="none" stroke="#818cf8" stroke-width="1.5" opacity="0.5"/>
+        <circle cx="265" cy="240" r="3.5" fill="none" stroke="#818cf8" stroke-width="1.5" opacity="0.5"/>
+        <circle cx="128" cy="240" r="3.5" fill="none" stroke="#818cf8" stroke-width="1.5" opacity="0.5"/>
+        <circle cx="127" cy="150" r="3.5" fill="none" stroke="#818cf8" stroke-width="1.5" opacity="0.5"/>
+      </g>
+
+      <!-- ── NUCLEOLUS ── -->
+      <g class="cw-org" data-id="nucleolus" onclick="cwSel('nucleolus')">
+        <title>Nucleolus — click to explore</title>
+        <circle class="cw-gl" cx="185" cy="184" r="25" fill="#a78bfa" opacity="0.45" filter="url(#f-sm)"/>
+        <circle cx="185" cy="184" r="25" fill="url(#g-nucl)"/>
+        <circle class="cw-bdr" cx="185" cy="184" r="25" fill="none" stroke="#a78bfa" stroke-width="2" opacity="0.9"/>
+      </g>
+
+      <!-- ── MITOCHONDRION 1 (upper right) ── -->
+      <g class="cw-org" data-id="mitochondria" onclick="cwSel('mitochondria')" transform="rotate(-22,368,150)">
+        <title>Mitochondria — click to explore</title>
+        <ellipse class="cw-gl" cx="368" cy="150" rx="49" ry="21" fill="#f97316" opacity="0.22" filter="url(#f-sm)"/>
+        <ellipse cx="368" cy="150" rx="49" ry="21" fill="url(#g-mito)"/>
+        <ellipse class="cw-bdr" cx="368" cy="150" rx="49" ry="21" fill="none" stroke="#f97316" stroke-width="2" opacity="0.9"/>
+        <path d="M 335,146 Q 341,137 347,146 Q 353,155 359,146" fill="none" stroke="#fdba74" stroke-width="1.5" opacity="0.75"/>
+        <path d="M 352,152 Q 358,143 364,152 Q 370,161 376,152" fill="none" stroke="#fdba74" stroke-width="1.5" opacity="0.75"/>
+        <path d="M 368,147 Q 374,138 380,147 Q 386,156 392,147" fill="none" stroke="#fdba74" stroke-width="1.5" opacity="0.75"/>
+      </g>
+
+      <!-- ── MITOCHONDRION 2 (lower area) ── -->
+      <g class="cw-org" data-id="mitochondria" onclick="cwSel('mitochondria')" transform="rotate(16,347,298)">
+        <title>Mitochondria — click to explore</title>
+        <ellipse class="cw-gl" cx="347" cy="298" rx="44" ry="19" fill="#f97316" opacity="0.22" filter="url(#f-sm)"/>
+        <ellipse cx="347" cy="298" rx="44" ry="19" fill="url(#g-mito)"/>
+        <ellipse class="cw-bdr" cx="347" cy="298" rx="44" ry="19" fill="none" stroke="#f97316" stroke-width="2" opacity="0.9"/>
+        <path d="M 316,294 Q 322,285 328,294 Q 334,303 340,294" fill="none" stroke="#fdba74" stroke-width="1.5" opacity="0.75"/>
+        <path d="M 335,300 Q 341,291 347,300 Q 353,309 359,300" fill="none" stroke="#fdba74" stroke-width="1.5" opacity="0.75"/>
+        <path d="M 354,295 Q 360,286 366,295 Q 372,304 378,295" fill="none" stroke="#fdba74" stroke-width="1.4" opacity="0.7"/>
+      </g>
+
+      <!-- ── GOLGI APPARATUS ── -->
+      <g class="cw-org" data-id="golgi" onclick="cwSel('golgi')">
+        <title>Golgi Apparatus — click to explore</title>
+        <path class="cw-gl" d="M 364,207 C 402,200 418,218 418,224 C 418,230 402,248 364,241" fill="#e879f9" opacity="0.12" filter="url(#f-sm)"/>
+        <path class="cw-bdr" d="M 364,206 C 402,199 418,217 418,223 C 418,229 402,247 364,240" fill="rgba(232,121,249,0.08)" stroke="#e879f9" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M 362,215 C 401,208 418,226 418,232 C 418,238 401,256 362,249" fill="rgba(232,121,249,0.08)" stroke="#e879f9" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M 360,224 C 400,217 419,235 419,241 C 419,247 400,265 360,258" fill="rgba(232,121,249,0.08)" stroke="#e879f9" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M 361,233 C 400,227 417,244 417,250 C 417,256 400,274 361,267" fill="rgba(232,121,249,0.08)" stroke="#e879f9" stroke-width="2.3" stroke-linecap="round"/>
+        <path d="M 363,242 C 400,236 416,252 416,258 C 416,264 400,281 363,274" fill="rgba(232,121,249,0.07)" stroke="#e879f9" stroke-width="2.2" stroke-linecap="round"/>
+      </g>
+
+      <!-- ── LYSOSOME 1 ── -->
+      <g class="cw-org" data-id="lysosome" onclick="cwSel('lysosome')">
+        <title>Lysosome — click to explore</title>
+        <circle class="cw-gl" cx="426" cy="278" r="19" fill="#f43f5e" opacity="0.32" filter="url(#f-sm)"/>
+        <circle cx="426" cy="278" r="18" fill="url(#g-lyso)"/>
+        <circle class="cw-bdr" cx="426" cy="278" r="18" fill="none" stroke="#f43f5e" stroke-width="2" opacity="0.9"/>
+        <circle cx="421" cy="274" r="2.5" fill="#fb7185" opacity="0.7"/>
+        <circle cx="430" cy="278" r="2"   fill="#fb7185" opacity="0.7"/>
+        <circle cx="423" cy="283" r="2"   fill="#fb7185" opacity="0.7"/>
+        <circle cx="432" cy="271" r="1.8" fill="#fb7185" opacity="0.6"/>
+      </g>
+
+      <!-- ── LYSOSOME 2 ── -->
+      <g class="cw-org" data-id="lysosome" onclick="cwSel('lysosome')">
+        <title>Lysosome — click to explore</title>
+        <circle class="cw-gl" cx="154" cy="358" r="16" fill="#f43f5e" opacity="0.32" filter="url(#f-sm)"/>
+        <circle cx="154" cy="358" r="15" fill="url(#g-lyso)"/>
+        <circle class="cw-bdr" cx="154" cy="358" r="15" fill="none" stroke="#f43f5e" stroke-width="2" opacity="0.9"/>
+        <circle cx="150" cy="355" r="2.2" fill="#fb7185" opacity="0.7"/>
+        <circle cx="158" cy="360" r="1.8" fill="#fb7185" opacity="0.7"/>
+        <circle cx="152" cy="362" r="1.8" fill="#fb7185" opacity="0.6"/>
+      </g>
+
+      <!-- ── VACUOLE ── -->
+      <g class="cw-org" data-id="vacuole" onclick="cwSel('vacuole')">
+        <title>Vacuole — click to explore</title>
+        <circle class="cw-gl" cx="298" cy="352" r="31" fill="#38bdf8" opacity="0.16" filter="url(#f-sm)"/>
+        <circle cx="298" cy="352" r="30" fill="url(#g-vac)"/>
+        <circle class="cw-bdr" cx="298" cy="352" r="30" fill="none" stroke="#38bdf8" stroke-width="2" opacity="0.9"/>
+        <circle cx="298" cy="352" r="21" fill="none" stroke="#38bdf8" stroke-width="1" opacity="0.28"/>
+      </g>
+
+      <!-- ── FREE RIBOSOMES ── -->
+      <g class="cw-org" data-id="ribosomes" onclick="cwSel('ribosomes')">
+        <title>Ribosomes — click to explore</title>
+        <circle cx="245" cy="148" r="3.5" fill="#fbbf24" filter="url(#f-sm)" opacity="0.95"/>
+        <circle cx="256" cy="141" r="3"   fill="#fbbf24" opacity="0.9"/>
+        <circle cx="218" cy="282" r="3.5" fill="#fbbf24" filter="url(#f-sm)" opacity="0.95"/>
+        <circle cx="228" cy="292" r="3"   fill="#fbbf24" opacity="0.9"/>
+        <circle cx="212" cy="297" r="3.5" fill="#fbbf24" opacity="0.85"/>
+        <circle cx="370" cy="202" r="3.5" fill="#fbbf24" filter="url(#f-sm)" opacity="0.95"/>
+        <circle cx="380" cy="194" r="3"   fill="#fbbf24" opacity="0.9"/>
+        <circle cx="356" cy="192" r="3"   fill="#fbbf24" opacity="0.85"/>
+        <circle cx="432" cy="345" r="3.5" fill="#fbbf24" filter="url(#f-sm)" opacity="0.95"/>
+        <circle cx="422" cy="352" r="3"   fill="#fbbf24" opacity="0.9"/>
+        <circle cx="148" cy="240" r="3"   fill="#fbbf24" filter="url(#f-sm)" opacity="0.9"/>
+        <circle cx="140" cy="250" r="3.5" fill="#fbbf24" opacity="0.85"/>
+        <circle cx="386" cy="172" r="3"   fill="#fbbf24" opacity="0.85"/>
+        <circle cx="396" cy="164" r="3.5" fill="#fbbf24" filter="url(#f-sm)" opacity="0.95"/>
+        <circle cx="172" cy="156" r="3"   fill="#fbbf24" opacity="0.8"/>
+        <circle cx="162" cy="164" r="3.5" fill="#fbbf24" opacity="0.85"/>
+      </g>
+
+      <!-- ── CELL MEMBRANE (on top so it's clickable at the edge) ── -->
+      <g class="cw-org" data-id="membrane" onclick="cwSel('membrane')">
+        <title>Cell Membrane — click to explore</title>
+        <ellipse class="cw-gl" cx="258" cy="215" rx="243" ry="192" fill="none" stroke="#22d3ee" stroke-width="8" opacity="0.2" filter="url(#f-glow)"/>
+        <ellipse class="cw-bdr" cx="258" cy="215" rx="243" ry="192" fill="none" stroke="#22d3ee" stroke-width="2.5" stroke-dasharray="9 5" opacity="0.88"/>
+        <ellipse cx="258" cy="215" rx="236" ry="185" fill="none" stroke="#22d3ee" stroke-width="1" opacity="0.22"/>
+        <!-- invisible thick hit target -->
+        <ellipse cx="258" cy="215" rx="243" ry="192" fill="transparent" stroke="transparent" stroke-width="16"/>
+      </g>
+
+      <!-- LABELS (small, elegant, no lines) -->
+      <text x="258" y="15"  font-family="Verdana,sans-serif" font-size="8.5" fill="#22d3ee"  text-anchor="middle" opacity="0.7" pointer-events="none">Cell Membrane</text>
+      <text x="155" y="138" font-family="Verdana,sans-serif" font-size="8"   fill="#818cf8"  text-anchor="middle" opacity="0.7" pointer-events="none">Nucleus</text>
+      <text x="151" y="175" font-family="Verdana,sans-serif" font-size="7.5" fill="#a78bfa"  text-anchor="middle" opacity="0.65" pointer-events="none">Nucleolus</text>
+      <text x="388" y="110" font-family="Verdana,sans-serif" font-size="8"   fill="#f97316"  text-anchor="middle" opacity="0.7" pointer-events="none">Mitochondria</text>
+      <text x="456" y="227" font-family="Verdana,sans-serif" font-size="8"   fill="#e879f9"  text-anchor="start"  opacity="0.7" pointer-events="none">Golgi</text>
+      <text x="350" y="145" font-family="Verdana,sans-serif" font-size="8"   fill="#10b981"  text-anchor="middle" opacity="0.7" pointer-events="none">Rough ER</text>
+      <text x="78"  y="258" font-family="Verdana,sans-serif" font-size="8"   fill="#2dd4bf"  text-anchor="middle" opacity="0.7" pointer-events="none">Smooth ER</text>
+      <text x="458" y="278" font-family="Verdana,sans-serif" font-size="8"   fill="#f43f5e"  text-anchor="start"  opacity="0.7" pointer-events="none">Lysosome</text>
+      <text x="298" y="395" font-family="Verdana,sans-serif" font-size="8"   fill="#38bdf8"  text-anchor="middle" opacity="0.7" pointer-events="none">Vacuole</text>
+      <text x="245" y="132" font-family="Verdana,sans-serif" font-size="8"   fill="#fbbf24"  text-anchor="middle" opacity="0.7" pointer-events="none">Ribosomes</text>
+    </svg>
+    </div>
+
+    <!-- INFO PANEL -->
+    <div id="cw-panel">
+      <div id="cw-leg">
+        <div class="cw-leg-hd">Organelles</div>
+      </div>
+      <div id="cw-det">
+        <div class="cw-det-name" id="cw-dname"></div>
+        <div class="cw-det-role" id="cw-drole"></div>
+        <div class="cw-det-bar"  id="cw-dbar"></div>
+        <div class="cw-det-desc" id="cw-ddesc"></div>
+        <div class="cw-det-facts" id="cw-dfacts"></div>
+        <div class="cw-det-know" id="cw-dknow"></div>
+        <button class="cw-back" onclick="cwBack()">&#8592; All Organelles</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+
+var D={
+  'membrane':{
+    name:'Cell Membrane',color:'#22d3ee',role:'Barrier & Gatekeeper',
+    desc:'A selectively permeable phospholipid bilayer forming the outer boundary of every animal cell, controlling what enters and exits.',
+    facts:[
+      'Made of two phospholipid layers with hydrophilic heads facing outward and hydrophobic tails facing inward',
+      'Membrane proteins act as channels, pumps, receptors and structural anchors — described by the fluid mosaic model',
+      'Just 7–10 nanometres thick — roughly 5,000 times thinner than a human hair'
+    ],
+    know:'A single cell membrane contains over <strong>1 billion</strong> phospholipid molecules and can repair small tears within seconds.'
+  },
+  'nucleus':{
+    name:'Nucleus',color:'#818cf8',role:'Command Centre',
+    desc:'The largest organelle in most animal cells; houses the DNA and directs all cellular activities including growth, metabolism and division.',
+    facts:[
+      'Enclosed by the nuclear envelope — a double membrane with nuclear pores that regulate molecule traffic',
+      'Contains chromosomes: DNA wound tightly around histone proteins to form chromatin',
+      'The nucleoplasm (fluid inside) is kept separate from the cytoplasm'
+    ],
+    know:'The human cell nucleus contains about <strong>6 feet (1.8 m)</strong> of DNA, coiled to fit inside a space just 6 micrometres across.'
+  },
+  'nucleolus':{
+    name:'Nucleolus',color:'#a78bfa',role:'Ribosome Factory',
+    desc:'A dense region inside the nucleus where ribosomal RNA (rRNA) is transcribed and ribosome subunits are assembled before export to the cytoplasm.',
+    facts:[
+      'Not enclosed by its own membrane — forms around specific chromosomal regions called nucleolar organiser regions',
+      'Disappears during cell division and reforms in each daughter cell afterwards',
+      'Cells with high protein demand (like liver cells) often have large, prominent nucleoli'
+    ],
+    know:'A single human cell can produce up to <strong>10,000 ribosome subunits per minute</strong> in the nucleolus during rapid growth.'
+  },
+  'mitochondria':{
+    name:'Mitochondria',color:'#f97316',role:'Powerhouse of the Cell',
+    desc:'Double-membraned organelles that generate ATP (the cell\'s energy currency) through cellular respiration, using oxygen and glucose.',
+    facts:[
+      'The inner membrane is folded into cristae, dramatically increasing surface area for ATP synthase complexes',
+      'Contain their own circular DNA and ribosomes — evidence of endosymbiotic origin from ancient bacteria',
+      'A typical liver cell contains over 2,000 mitochondria, occupying ~25% of the cell volume'
+    ],
+    know:'Mitochondria are inherited almost exclusively from your <strong>mother</strong> — scientists use mitochondrial DNA to trace maternal lineage back thousands of years.'
+  },
+  'rough-er':{
+    name:'Rough Endoplasmic Reticulum',color:'#10b981',role:'Protein Production Line',
+    desc:'A network of membrane sacs (cisternae) studded with ribosomes, specialised in making proteins destined for secretion or membrane insertion.',
+    facts:[
+      '"Rough" refers to the ribosomes on its surface that translate mRNA into polypeptide chains',
+      'Newly made proteins enter the ER lumen where they are folded, modified and quality-checked',
+      'Continuous with the nuclear envelope — proteins can travel directly from nucleus to ER'
+    ],
+    know:'The rough ER in a pancreatic cell can produce and process up to <strong>1 million insulin molecules</strong> per minute.'
+  },
+  'smooth-er':{
+    name:'Smooth Endoplasmic Reticulum',color:'#2dd4bf',role:'Lipid Synthesis & Detox',
+    desc:'A smooth-surfaced membrane network (no ribosomes) responsible for lipid and steroid synthesis, calcium storage, and detoxification.',
+    facts:[
+      'Especially abundant in liver cells, where it breaks down alcohol, drugs and metabolic waste products',
+      'Stores calcium ions in muscle cells — releasing Ca²⁺ triggers muscle contraction',
+      'Synthesises phospholipids for all cell membranes and steroid hormones like testosterone and oestrogen'
+    ],
+    know:'Regular alcohol consumption causes liver cells to <strong>triple the amount</strong> of smooth ER — the cell adapts to cope with increased detoxification demand.'
+  },
+  'golgi':{
+    name:'Golgi Apparatus',color:'#e879f9',role:'Sorting & Shipping Hub',
+    desc:'A stack of flattened membrane cisternae that receives proteins from the rough ER, modifies them, and dispatches them to correct destinations inside or outside the cell.',
+    facts:[
+      'Has a cis face (receiving, near ER) and a trans face (shipping) — proteins flow from cis to trans',
+      'Modifies proteins by adding sugar chains, phosphates or lipids that act as address labels for sorting',
+      'Produces lysosomes and secretory vesicles by budding from the trans face'
+    ],
+    know:'The Golgi was discovered in 1898 by Camillo Golgi — and was so unusual that many scientists initially dismissed it as an <strong>artefact of staining</strong>, not a real structure.'
+  },
+  'lysosome':{
+    name:'Lysosome',color:'#f43f5e',role:'Recycling Centre',
+    desc:'Small membrane-bound vesicles containing over 50 types of hydrolytic enzymes, used to break down waste materials, old organelles, and invading pathogens.',
+    facts:[
+      'The interior is highly acidic (pH ~4.5–5) — this activates the enzymes and protects the rest of the cell if the membrane leaks',
+      'Carry out autophagy — breaking down damaged organelles to salvage reusable molecules',
+      'Fuse with phagosomes to digest engulfed bacteria — a key part of innate immunity'
+    ],
+    know:'When a tadpole transforms into a frog, lysosomes deliberately <strong>burst to dissolve the tail from within</strong> — a process called autolysis.'
+  },
+  'vacuole':{
+    name:'Vacuole',color:'#38bdf8',role:'Storage Chamber',
+    desc:'A membrane-bound organelle used to store water, nutrients and waste. Animal cell vacuoles are small and temporary compared to the massive central vacuole found in plant cells.',
+    facts:[
+      'In animal cells, vacuoles are typically small, forming temporarily via endocytosis or exocytosis',
+      'Food vacuoles (phagosomes) form when cells engulf solid particles or whole bacteria',
+      'Contractile vacuoles in single-celled organisms like Paramecium pump out excess water to maintain osmotic balance'
+    ],
+    know:'Plant cell central vacuoles can occupy <strong>up to 90%</strong> of the cell\'s volume — the plant cell is essentially a bag of water wrapped in a thin cytoplasm shell.'
+  },
+  'ribosomes':{
+    name:'Ribosomes',color:'#fbbf24',role:'Protein Synthesisers',
+    desc:'The cell\'s protein-making machines — complexes of ribosomal RNA and proteins that decode mRNA and assemble amino acids into polypeptide chains.',
+    facts:[
+      'Composed of a large and small subunit that come together on mRNA to begin translation',
+      'Free ribosomes make proteins for use inside the cell; ER-bound ribosomes make proteins for secretion or membranes',
+      'Each ribosome adds roughly 10–20 amino acids per second to a growing polypeptide chain'
+    ],
+    know:'A single human cell contains up to <strong>10 million ribosomes</strong> — more than any other organelle type in the entire cell.'
+  }
+};
+
+var ITEMS=[
+  {id:'membrane',    label:'Cell Membrane'},
+  {id:'nucleus',     label:'Nucleus'},
+  {id:'nucleolus',   label:'Nucleolus'},
+  {id:'mitochondria',label:'Mitochondria'},
+  {id:'rough-er',    label:'Rough ER'},
+  {id:'smooth-er',   label:'Smooth ER'},
+  {id:'golgi',       label:'Golgi Apparatus'},
+  {id:'lysosome',    label:'Lysosome'},
+  {id:'vacuole',     label:'Vacuole'},
+  {id:'ribosomes',   label:'Ribosomes'}
+];
+
+// Build legend
+var leg=document.getElementById('cw-leg');
+ITEMS.forEach(function(item){
+  var c=D[item.id].color;
+  var div=document.createElement('div');
+  div.className='cw-li';div.setAttribute('data-id',item.id);
+  div.style.setProperty('--lc',c);
+  div.innerHTML='<span class="cw-dot"></span><span class="cw-nm">'+item.label+'</span>';
+  div.onclick=function(){cwSel(item.id);};
+  leg.appendChild(div);
+});
+
+window.cwSel=function(id){
+  if(!D[id])return;
+  var d=D[id];
+
+  // SVG highlight
+  document.querySelectorAll('#cw .cw-org').forEach(function(g){
+    g.classList.toggle('active',g.getAttribute('data-id')===id);
+  });
+  // legend highlight
+  document.querySelectorAll('#cw .cw-li').forEach(function(el){
+    el.classList.toggle('active',el.getAttribute('data-id')===id);
+  });
+
+  // fill detail panel
+  var det=document.getElementById('cw-det');
+  det.style.setProperty('--dc',d.color);
+  document.getElementById('cw-dname').textContent=d.name;
+  var roleEl=document.getElementById('cw-drole');
+  roleEl.textContent=d.role;roleEl.style.color=d.color;
+  document.getElementById('cw-dbar').style.background=d.color;
+  document.getElementById('cw-ddesc').textContent=d.desc;
+
+  var factsEl=document.getElementById('cw-dfacts');
+  factsEl.innerHTML='';
+  d.facts.forEach(function(f){
+    var div=document.createElement('div');div.className='cw-det-fact';
+    div.style.setProperty('--dc',d.color);div.textContent=f;
+    factsEl.appendChild(div);
+  });
+
+  var knowEl=document.getElementById('cw-dknow');
+  knowEl.innerHTML='<strong style="color:'+d.color+'">Did you know?</strong> '+d.know;
+
+  // toggle panels
+  document.getElementById('cw-leg').style.display='none';
+  det.classList.remove('show');
+  void det.offsetWidth;
+  det.classList.add('show');
+};
+
+window.cwBack=function(){
+  document.querySelectorAll('#cw .cw-org').forEach(function(g){g.classList.remove('active');});
+  document.querySelectorAll('#cw .cw-li').forEach(function(el){el.classList.remove('active');});
+  document.getElementById('cw-leg').style.display='';
+  document.getElementById('cw-det').classList.remove('show');
+};
+
+})();
+</script>
